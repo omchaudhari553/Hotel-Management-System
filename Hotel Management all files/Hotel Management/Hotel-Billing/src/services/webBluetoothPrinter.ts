@@ -58,25 +58,17 @@ class WebBluetoothPrinterService {
     this.listeners.forEach((l) => l(this.state, printer));
   }
 
-  private startKeepAlive() {
+    private startKeepAlive() {
     this.stopKeepAlive();
-    // Heartbeat every 12 seconds to prevent Windows BLE sleep timer from dropping connection
+    // Monitor connection every 8 seconds without sending disruptive ping bytes
     this.keepAliveInterval = setInterval(async () => {
-      if (this.isConnected() && this.characteristic) {
-        try {
-          // Send innocuous real-time status query (DLE EOT 1: Transmit printer status)
-          const ping = new Uint8Array([0x10, 0x04, 0x01]);
-          if (this.characteristic.writeValueWithoutResponse) {
-            await this.characteristic.writeValueWithoutResponse(ping);
-          } else {
-            await this.characteristic.writeValue(ping);
-          }
-        } catch {
-          // If ping fails, trigger silent reconnect
+      if (this.device && this.device.gatt) {
+        if (!this.device.gatt.connected && this.state === 'connected') {
+          // Device dropped by OS; attempt seamless reconnection
           this.handleDisconnectEvent();
         }
       }
-    }, 12000);
+    }, 8000);
   }
 
   private stopKeepAlive() {

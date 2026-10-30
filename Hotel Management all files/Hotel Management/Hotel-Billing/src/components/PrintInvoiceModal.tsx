@@ -89,7 +89,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
             const html = doc.documentElement;
             const scrollH = Math.max(body?.scrollHeight || 0, html?.scrollHeight || 0);
             if (scrollH > 50) {
-              setIframeHeight(Math.min(Math.max(scrollH + 12, 240), paperSize === 'A4' ? 520 : 420));
+              setIframeHeight(Math.min(Math.max(scrollH + 4, 160), paperSize === 'A4' ? 520 : 390));
             }
           } catch {
             // fallback
@@ -516,7 +516,7 @@ export const PrintInvoiceModal: React.FC<PrintInvoiceModalProps> = ({
                 backgroundColor: '#FFFFFF',
                 boxShadow: '0 8px 24px -4px rgba(0, 0, 0, 0.18)',
                 borderRadius: paperSize === 'A4' ? '4px' : '3px',
-                width: paperSize === '58mm' ? '280px' : paperSize === '80mm' ? '380px' : '100%',
+                width: paperSize === '58mm' ? '228px' : paperSize === '80mm' ? '320px' : '100%',
                 maxWidth: paperSize === 'A4' ? '520px' : undefined,
                 overflow: 'hidden',
                 transition: 'all 0.2s ease',

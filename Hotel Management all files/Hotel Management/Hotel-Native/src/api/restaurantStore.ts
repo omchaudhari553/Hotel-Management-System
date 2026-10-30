@@ -615,7 +615,7 @@ export const restaurantStore = {
               const tax = Math.round(sub * 0.05);
               const tot = Number(ord.totalAmount) || sub + tax;
               const isBillReq = ord.status === 'BILL_REQUESTED';
-              const isCompleted = ord.status === 'COMPLETED' || ord.status === 'PAID';
+              const isCompleted = ord.status === 'PAID';
 
               const tableNum =
                 (ord.tableNumber && ord.tableNumber.trim()) ||

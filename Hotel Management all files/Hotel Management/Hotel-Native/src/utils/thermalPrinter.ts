@@ -1,4 +1,5 @@
 import { Platform, Alert } from 'react-native';
+import * as Print from 'expo-print';
 import { toDevanagariNumerals } from '../locales/translations';
 
 export interface PrintItem {
@@ -48,14 +49,7 @@ export interface KotPrintData {
  * Ensures 0 blank pages and clean, crisp monospace rendering.
  */
 export const printCustomerBill80mm = (data: BillPrintData) => {
-  if (Platform.OS === 'web') {
-    const printWindow = window.open('', '_blank', 'width=420,height=650');
-    if (!printWindow) {
-      alert('Please allow popups for this site to print 80mm bill receipts.');
-      return;
-    }
-
-    const isDevanagari = data.language === 'mr' || data.language === 'hi';
+  const isDevanagari = data.language === 'mr' || data.language === 'hi';
     const fmtNum = (val: number | string) => isDevanagari ? toDevanagariNumerals(val) : String(val);
 
     const hotelName = data.hotelName || 'AJALKAR HOTEL & RESTAURANT';
@@ -249,11 +243,24 @@ export const printCustomerBill80mm = (data: BillPrintData) => {
 </body>
 </html>`;
 
+  if (Platform.OS === 'web') {
+    const printWindow = window.open('', '_blank', 'width=420,height=650');
+    if (!printWindow) {
+      alert('Please allow popups for this site to print 80mm bill receipts.');
+      return;
+    }
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
   } else {
-    console.log(`[80mm Thermal Print] Invoice #${data.invoiceNumber} (Table: ${data.tableName}) sent to thermal printer.`);
+    Print.printAsync({
+      html,
+      orientation: Print.Orientation.portrait,
+    }).catch((err: any) => {
+      if (!err.message?.includes('User canceled')) {
+        Alert.alert('Print Error', err.message || 'Could not print receipt.');
+      }
+    });
   }
 };
 
@@ -261,14 +268,7 @@ export const printCustomerBill80mm = (data: BillPrintData) => {
  * 80mm Thermal KOT Ticket Printer Utility
  */
 export const printKotTicket80mm = (data: KotPrintData) => {
-  if (Platform.OS === 'web') {
-    const printWindow = window.open('', '_blank', 'width=420,height=600');
-    if (!printWindow) {
-      alert('Please allow popups for this site to print 80mm KOT tickets.');
-      return;
-    }
-
-    const isDevanagari = data.language === 'mr' || data.language === 'hi';
+  const isDevanagari = data.language === 'mr' || data.language === 'hi';
     const fmtNum = (val: number | string) => isDevanagari ? toDevanagariNumerals(val) : String(val);
 
     const dateStr = fmtNum(data.date || new Date().toLocaleDateString('en-IN'));
@@ -411,10 +411,23 @@ export const printKotTicket80mm = (data: KotPrintData) => {
 </body>
 </html>`;
 
+  if (Platform.OS === 'web') {
+    const printWindow = window.open('', '_blank', 'width=420,height=600');
+    if (!printWindow) {
+      alert('Please allow popups for this site to print 80mm KOT tickets.');
+      return;
+    }
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
   } else {
-    console.log(`[80mm KOT Print] KOT #${data.kotNumber} (Table: ${data.tableName}) sent to kitchen printer.`);
+    Print.printAsync({
+      html,
+      orientation: Print.Orientation.portrait,
+    }).catch((err: any) => {
+      if (!err.message?.includes('User canceled')) {
+        Alert.alert('Print Error', err.message || 'Could not print KOT ticket.');
+      }
+    });
   }
 };

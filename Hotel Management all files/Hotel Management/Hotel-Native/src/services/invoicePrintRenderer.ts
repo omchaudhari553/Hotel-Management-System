@@ -104,11 +104,19 @@ export function generate58mmHtml(data: UniversalInvoicePrintData): string {
     * { box-sizing: border-box !important; margin: 0; padding: 0; }
     body {
       width: 58mm !important; max-width: 58mm !important; margin: 0 auto !important;
-      padding: 3mm 2mm 5mm 2mm !important; background: #FFFFFF !important; color: #000000 !important;
-      font-family: monospace !important; font-size: 11px; line-height: 1.25;
+      padding: 1.5mm 0.8mm 1mm 0.8mm !important; background: #FFFFFF !important; color: #000000 !important;
+      font-family: monospace !important; font-size: 11px; line-height: 1.22;
     }
     .text-center { text-align: center; }
     .bold { font-weight: bold; }
+    .hotel-address {
+      font-size: 8px !important;
+      letter-spacing: -0.2px;
+      white-space: nowrap !important;
+      text-align: center;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
     .divider { border-top: 1px dashed #000000; margin: 3px 0; }
     .double-divider { border-top: 2px dashed #000000; margin: 4px 0; }
     .flex-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
@@ -117,12 +125,12 @@ export function generate58mmHtml(data: UniversalInvoicePrintData): string {
   </style>
 </head>
 <body>
-  <div class="text-center bold" style="font-size: 14px; text-transform: uppercase;">
+  <div class="text-center bold" style="font-size: 13.5px; text-transform: uppercase;">
     ${data.hotelName || 'HOTEL MANAGEMENT'}
   </div>
-  ${data.hotelAddress ? `<div class="text-center" style="font-size: 9px; margin-top: 1px;">${data.hotelAddress}</div>` : ''}
-  ${data.hotelPhone ? `<div class="text-center" style="font-size: 9px;">Tel: ${data.hotelPhone}</div>` : ''}
-  ${data.gstin ? `<div class="text-center bold" style="font-size: 9px;">GSTIN: ${data.gstin}</div>` : ''}
+  ${data.hotelAddress ? `<div class="hotel-address">${data.hotelAddress}</div>` : ''}
+  ${data.hotelPhone ? `<div class="text-center" style="font-size: 8.5px;">Tel: ${data.hotelPhone}</div>` : ''}
+  ${data.gstin ? `<div class="text-center bold" style="font-size: 8.5px;">GSTIN: ${data.gstin}</div>` : ''}
   ${data.fssai ? `<div class="text-center" style="font-size: 8px;">FSSAI: ${data.fssai}</div>` : ''}
 
   <div class="double-divider"></div>
@@ -133,7 +141,19 @@ export function generate58mmHtml(data: UniversalInvoicePrintData): string {
     <span>INV: #${data.invoiceNumber}</span>
     <span>${data.invoiceDate}</span>
   </div>
-  ${data.tableName ? `<div class="flex-row"><span>Table: ${data.tableName}</span><span>${data.orderNumber ? 'Ord: ' + data.orderNumber : ''}</span></div>` : ''}
+  ${(data.tableName && data.orderNumber && ((data.tableName.length + data.orderNumber.length) > 18)) ? `
+    <div class="flex-row" style="white-space: nowrap;">
+      <span>Table: ${data.tableName}</span>
+    </div>
+    <div class="flex-row" style="white-space: nowrap;">
+      <span>Ord: ${data.orderNumber}</span>
+    </div>
+  ` : (data.tableName || data.orderNumber) ? `
+    <div class="flex-row" style="white-space: nowrap;">
+      <span>${data.tableName ? 'Table: ' + data.tableName : ''}</span>
+      <span>${data.orderNumber ? 'Ord: ' + data.orderNumber : ''}</span>
+    </div>
+  ` : ''}
   ${data.customerName ? `<div class="flex-row"><span>Guest: ${data.customerName}</span></div>` : ''}
 
   <div class="divider"></div>
@@ -184,11 +204,8 @@ export function generate58mmHtml(data: UniversalInvoicePrintData): string {
   </div>
 
   <div class="double-divider"></div>
-  <div class="text-center bold" style="font-size: 10px; margin-top: 3px;">
+  <div class="text-center bold" style="font-size: 9.5px; margin-top: 2px; padding-bottom: 0px;">
     ${data.footerMessage || 'Thank you for visiting!'}
-  </div>
-  <div class="text-center" style="font-size: 8px; margin-top: 2px; color: #444;">
-    [58mm Mobile Thermal Slip • Ajalkar POS]
   </div>
 </body>
 </html>`;
@@ -224,7 +241,7 @@ export function generate80mmHtml(data: UniversalInvoicePrintData): string {
     * { box-sizing: border-box !important; margin: 0; padding: 0; }
     body {
       width: 80mm !important; max-width: 80mm !important; margin: 0 auto !important;
-      padding: 4mm 3mm 6mm 3mm !important; background: #FFFFFF !important; color: #000000 !important;
+      padding: 2.5mm 1.5mm 2mm 1.5mm !important; background: #FFFFFF !important; color: #000000 !important;
       font-family: monospace !important; font-size: 12px; line-height: 1.3;
     }
     .text-center { text-align: center; }

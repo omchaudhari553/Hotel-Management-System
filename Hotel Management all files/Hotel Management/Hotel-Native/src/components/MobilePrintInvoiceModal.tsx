@@ -135,12 +135,12 @@ export const MobilePrintInvoiceModal: React.FC<MobilePrintInvoiceModalProps> = (
             <View style={styles.guidanceBox}>
               <View style={styles.guidanceRow}>
                 <Bluetooth size={16} color="#090040" />
-                <Text style={styles.guidanceTitle}>Bluetooth Printer Compatibility</Text>
+                <Text style={styles.guidanceTitle}>Bluetooth Thermal Printer Setup (Android)</Text>
               </View>
               <Text style={styles.guidanceText}>
-                • Pair your Bluetooth thermal printer in Android Settings &gt; Bluetooth.
-                {'\n'}• Works seamlessly via the Android Print Spooler or standard ESC/POS print services.
-                {'\n'}• For A4 invoices, connect to any Wi-Fi/Mopria printer or export as PDF.
+                • पायरी १: फोनच्या Bluetooth मध्ये प्रिंटर Pair करा (PIN: 0000 किंवा 1234).
+                {'\n'}• पायरी २: "RawBT Print Service" ॲप चालू ठेवा (Android Settings &gt; Printers).
+                {'\n'}• पायरी ३: खाली "Print Invoice" दाबा — प्रिंटर आपोआप कनेक्ट होऊन प्रिंट निघेल!
               </Text>
             </View>
 

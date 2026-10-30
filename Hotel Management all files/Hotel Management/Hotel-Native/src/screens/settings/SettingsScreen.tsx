@@ -62,7 +62,9 @@ import {
   CheckCircle,
   ShoppingCart,
   UtensilsCrossed,
+  Bluetooth,
 } from 'lucide-react-native';
+import { MobilePrintService } from '../../services/mobilePrintService';
 import { localizeGuestName } from '../../locales/nameLocalization';
 
 export type SettingsTabKey =
@@ -366,10 +368,13 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
   const [address, setAddress] = useState<string>('Hotel Premises, MG Road, Pune');
   const [currency, setCurrency] = useState<string>('INR');
 
-  // 2. Billing Settings State (Screenshot 2: 3 toggles)
+  // 2. Billing Settings State (Screenshot 2: 3 toggles + Bluetooth)
   const [enableTax, setEnableTax] = useState<boolean>(true);
   const [enableDiscount, setEnableDiscount] = useState<boolean>(true);
   const [enableRoundOff, setEnableRoundOff] = useState<boolean>(true);
+  const [enableBluetoothPrinter, setEnableBluetoothPrinter] = useState<boolean>(true);
+  const [bluetoothRollSize, setBluetoothRollSize] = useState<'80mm' | '58mm'>('80mm');
+  const [testPrintLoading, setTestPrintLoading] = useState<boolean>(false);
 
   // 3. Notification Settings State (Screenshot 1: 6 toggles)
   const [notifPaymentReceived, setNotifPaymentReceived] = useState<boolean>(true);
@@ -528,6 +533,8 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
           if (b.enableTax !== undefined) setEnableTax(b.enableTax);
           if (b.enableDiscount !== undefined) setEnableDiscount(b.enableDiscount);
           if (b.enableRoundOff !== undefined) setEnableRoundOff(b.enableRoundOff);
+          if (b.enableBluetoothPrinter !== undefined) setEnableBluetoothPrinter(b.enableBluetoothPrinter);
+          if (b.bluetoothRollSize) setBluetoothRollSize(b.bluetoothRollSize);
         }
 
         const savedSystem = await AsyncStorage.getItem('@hotel_system_settings');
@@ -803,6 +810,8 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
         enableTax,
         enableDiscount,
         enableRoundOff,
+        enableBluetoothPrinter,
+        bluetoothRollSize,
       };
       await AsyncStorage.setItem('@hotel_billing_settings', JSON.stringify(data));
       setLastSavedMessage('Just now');
@@ -816,7 +825,20 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
     setEnableTax(true);
     setEnableDiscount(true);
     setEnableRoundOff(true);
+    setEnableBluetoothPrinter(true);
+    setBluetoothRollSize('80mm');
     Alert.alert(t('reset', 'Reset'), t('resetToDefaults', 'Billing settings reset to defaults.'));
+  };
+
+  const handleTestPrint = async () => {
+    try {
+      setTestPrintLoading(true);
+      await MobilePrintService.testPrint(bluetoothRollSize);
+    } catch (err: any) {
+      Alert.alert('Test Print Error', err.message || 'Could not send test print.');
+    } finally {
+      setTestPrintLoading(false);
+    }
   };
 
   // Save System
@@ -3935,7 +3957,7 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
                     />
                   </View>
 
-                  <View style={[styles.toggleRow, { borderBottomWidth: 0 }]}>
+                  <View style={styles.toggleRow}>
                     <View style={{ flex: 1, paddingRight: 16 }}>
                       <Text style={styles.toggleLabel}>{t('roundOffAmount', 'Enable Round Off')}</Text>
                       <Text style={styles.toggleSub}>{t('roundOffAmountDesc', 'Round invoice totals automatically.')}</Text>
@@ -3947,7 +3969,90 @@ export const SettingsScreen: React.FC<{ navigation?: any }> = ({ navigation }) =
                       thumbColor="#FFFFFF"
                     />
                   </View>
+
+                  {/* 4. Bluetooth Thermal Printer Toggle (Brown Toggle matching web) */}
+                  <View style={[styles.toggleRow, !enableBluetoothPrinter && { borderBottomWidth: 0 }]}>
+                    <View style={{ flex: 1, paddingRight: 16 }}>
+                      <Text style={styles.toggleLabel}>Enable Bluetooth Thermal Printer</Text>
+                      <Text style={styles.toggleSub}>Direct connection with 58mm / 80mm ESC/POS Bluetooth printers</Text>
+                    </View>
+                    <Switch
+                      value={enableBluetoothPrinter}
+                      onValueChange={setEnableBluetoothPrinter}
+                      trackColor={{ true: '#8F351D', false: '#D9D0CA' }}
+                      thumbColor="#FFFFFF"
+                    />
+                  </View>
                 </View>
+
+                {enableBluetoothPrinter && (
+                  <View style={styles.btSettingsCard}>
+                    <View style={styles.btHeaderRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View style={styles.btIconCircle}>
+                          <Bluetooth size={18} color="#FFFFFF" />
+                        </View>
+                        <View>
+                          <Text style={styles.btCardTitle}>Direct Bluetooth Thermal (ESC/POS)</Text>
+                          <Text style={styles.btCardSub}>Pair with 58mm/80mm BLE thermal printers</Text>
+                        </View>
+                      </View>
+                      <View style={styles.btStatusBadge}>
+                        <View style={styles.btStatusDot} />
+                        <Text style={styles.btStatusBadgeText}>Active</Text>
+                      </View>
+                    </View>
+
+                    {/* Paper Roll Size Selector */}
+                    <Text style={styles.btConfigLabel}>DEFAULT RECEIPT ROLL SIZE</Text>
+                    <View style={styles.btRollRow}>
+                      <TouchableOpacity
+                        style={[styles.btRollBtn, bluetoothRollSize === '80mm' && styles.btRollBtnActive]}
+                        onPress={() => setBluetoothRollSize('80mm')}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.btRollText, bluetoothRollSize === '80mm' && styles.btRollTextActive]}>
+                          80mm Standard POS
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.btRollBtn, bluetoothRollSize === '58mm' && styles.btRollBtnActive]}
+                        onPress={() => setBluetoothRollSize('58mm')}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.btRollText, bluetoothRollSize === '58mm' && styles.btRollTextActive]}>
+                          58mm Pocket Thermal
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Android Guidance Box */}
+                    <View style={styles.btGuidanceBox}>
+                      <Text style={styles.btGuidanceHeading}>📱 Android Phone Connectivity Guide:</Text>
+                      <Text style={styles.btGuidanceText}>
+                        1. मोबाईलच्या Settings &gt; Bluetooth मध्ये जा आणि प्रिंटर Pair करा (उदा. ManeMess-Printer, PIN: 0000 किंवा 1234).
+                        {'\n'}2. Android सिस्टम प्रिंट स्पूलरसाठी "RawBT Print Service" ॲप Install करून चालू ठेवा.
+                        {'\n'}3. खालील Test Print किंवा KOT / बिलिंग मधून प्रिंट दाबताच प्रिंटर आपोआप दिसेल.
+                      </Text>
+                    </View>
+
+                    {/* Test Print Action */}
+                    <View style={{ marginTop: 12, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                      <TouchableOpacity
+                        style={styles.btTestPrintBtn}
+                        onPress={handleTestPrint}
+                        disabled={testPrintLoading}
+                        activeOpacity={0.8}
+                      >
+                        <Printer size={15} color="#090040" />
+                        <Text style={styles.btTestPrintText}>
+                          {testPrintLoading ? 'Dispatching...' : `Test Print (${bluetoothRollSize})`}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
 
                 <View style={styles.cardActionsRow}>
                   <TouchableOpacity
@@ -6686,5 +6791,129 @@ const styles = StyleSheet.create({
   },
   statusFilterPillTextActive: {
     color: '#FFFFFF',
+  },
+
+  // Bluetooth Thermal Settings Styles
+  btSettingsCard: {
+    marginTop: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 16,
+  },
+  btHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  btIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#090040',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#090040',
+  },
+  btCardSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  btStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  btStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
+  },
+  btStatusBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  btConfigLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#475569',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  btRollRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  btRollBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+  },
+  btRollBtnActive: {
+    borderColor: '#8F351D',
+    backgroundColor: '#FEF2F2',
+  },
+  btRollText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  btRollTextActive: {
+    color: '#8F351D',
+    fontWeight: '800',
+  },
+  btGuidanceBox: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3B82F6',
+    padding: 10,
+    marginBottom: 4,
+  },
+  btGuidanceHeading: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1E40AF',
+    marginBottom: 4,
+  },
+  btGuidanceText: {
+    fontSize: 11,
+    color: '#334155',
+    lineHeight: 16,
+  },
+  btTestPrintBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#090040',
+    backgroundColor: '#FFFFFF',
+  },
+  btTestPrintText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#090040',
   },
 });
